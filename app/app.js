@@ -7,7 +7,7 @@ require('./bundles/auth/index')
  
 var app = angular.module('myApp', ['underscore','ui.router','common','frontend','auth','ngCookies']);
 
-require('./middleware');
+require('./middlewares/access.js');
 //Include routers
 require('./routers');
 
