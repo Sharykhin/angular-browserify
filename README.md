@@ -1,31 +1,16 @@
-# keep-in-touch
-It's a simple social network
+# Angular Browserify
+It's a base fronend structure for future development
 
 
-Requirements:
+Installation:
 -------------
 
-It must be single page application by using angularjs and golang
-There are should be implemented following options:
-* Registration
-* Authorization
-* Find people
-* Friendlist
-* Chat with friend
-* Photo albums
-* Simple audio player
+    npm install
 
+    bower install
 
-For photo album there should be used progress bar
-
-Stack:
+Run:
 -----
 
-* Angularjs
-* Golang (Beego frameworkd)
-* Bootstrap CSS
- 
+    gulp serve
 
-Tests:
------
-Here will be situated stress tests
