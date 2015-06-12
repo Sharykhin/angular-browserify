@@ -96,6 +96,7 @@ gulp.task('serve', function() {
   server.listen(serverport);
   // Start live reload
   lrserver.listen(livereloadport);
+  console.log('Server is listening on ' + serverport)
   // Run the watch task, to keep taps on changes
   gulp.run('watch');
 });

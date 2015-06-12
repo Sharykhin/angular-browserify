@@ -1,7 +1,8 @@
 'use strict'
 var app = angular.module('myApp');
 
-app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvider', function($stateProvider, $urlRouterProvider,$httpProvider,AccessProvider){
+app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvider', 
+            function($stateProvider, $urlRouterProvider,$httpProvider,AccessProvider){
    $httpProvider.defaults.withCredentials = true;
    var access = AccessProvider.$get();  
    $urlRouterProvider.otherwise("/");
@@ -15,11 +16,12 @@ app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvide
                 'content' : {
                     templateUrl: 'bundles/frontend/views/index.html',
                     controller: 'frontend.DefaultController'
-            }            
-          }           
+            }
+          },
+          access: access.annon         
         })        
         .state('home.list',{
-            url: "/admin",            
+            url: "admin",            
             views: {
                 'content' : {
                     templateUrl: 'bundles/frontend/views/index.html',
@@ -33,7 +35,7 @@ app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvide
             views: {
                 'content' : {
                     templateUrl : 'bundles/auth/views/sign_in.html',
-                    controller : 'auth.AuthController'
+                    controller : 'auth.AuthController'                    
                 }
             },
             access: access.annon            
@@ -43,10 +45,10 @@ app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvide
             views : {
                 'content' : {
                     templateUrl : 'bundles/auth/views/sign_up.html',
-                    controller: 'auth.AuthController'
+                    controller: 'auth.AuthController as authCtrl'
                 }
             }
-        })
+        })       
         .state('forrbiden',{
             views: {
                 'content': {
@@ -54,6 +56,23 @@ app.config(['$stateProvider','$urlRouterProvider','$httpProvider','AccessProvide
                     controller : function() {}
                 }
             }
+        })
+        .state('sign_out',{
+            url:'/sign-out',
+            views: {
+                'content' : {
+                    controller: function(UserService,AuthService,$state) {   
+                            if (UserService.isLogged === false) {
+                                $state.go('home');
+                                return;
+                            }                     
+                            AuthService.signOut(function(data,status,headers,config) {
+                                $state.go('home'); 
+                            });
+                     }
+                }
+            },           
+            access: access.annon   
         })       
 
 }]);
