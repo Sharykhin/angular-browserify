@@ -9,6 +9,7 @@
   "author": "",
   "license": "BSD-2-Clause",
   "devDependencies": {
+    "gulp": "^3.8.11",
     "connect-livereload": "~0.5.3",
     "gulp-embedlr": "~0.5.2",
     "gulp-concat": "~2.5.2",
@@ -26,6 +27,13 @@
     "less-plugin-clean-css": "~1.5.0",
     "less-plugin-autoprefix": "~1.4.2",
     "gulp-less": "~3.0.3",
-    "gulp-jsbeautifier": "~1.0.1"
+    "gulp-jsbeautifier": "~1.0.1",
+    "chai": "2.2.0",
+    "gulp-protractor": "0.0.12",
+    "karma": "0.12.31",
+    "karma-chai": "0.1.0",
+    "karma-chrome-launcher": "0.1.7",
+    "karma-mocha": "0.1.10",
+    "protractor": "2.0.0"
   }
 }

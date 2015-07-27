@@ -1,3 +1,5 @@
+'use strict';
+
 var gulp = require('gulp'),
   gutil = require('gulp-util'),
   jshint = require('gulp-jshint'),
@@ -8,14 +10,16 @@ var gulp = require('gulp'),
   less = require('gulp-less'),
   prettify = require('gulp-jsbeautifier'),
   LessPluginCleanCSS = require('less-plugin-clean-css'),
-  LessPluginAutoPrefix = require('less-plugin-autoprefix');
+  LessPluginAutoPrefix = require('less-plugin-autoprefix'),
+  karma = require('karma').server,
+  protractor = require("gulp-protractor").protractor;
 
 var cleancss = new LessPluginCleanCSS({
     advanced: true
-  }),
+}),
   autoprefix = new LessPluginAutoPrefix({
     browsers: ["last 2 versions"]
-  });
+});
 
 var embedlr = require('gulp-embedlr'),
   refresh = require('gulp-livereload'),
@@ -23,16 +27,21 @@ var embedlr = require('gulp-embedlr'),
   express = require('express'),
   livereload = require('connect-livereload'),
   livereloadport = 35729,
-  serverport = 5000;
+  serverport = 5000,
+  testserverport=5500,
+  testlivereloadport = 35728;
 
 
 // JSHint task
 gulp.task('lint', function() {
-  gulp.src(['./app/**/*.js','!./app/vendor/**/*.js'])
+    gulp.src(['./app/**/*.js','!./app/vendor/**/*.js'])
     .pipe(jshint())
     // You can look into pretty reporters as well, but that's another story
     .pipe(jshint.reporter('jshint-stylish'));
 });
+
+
+// ============: STYLISH
 
 // JS Beautify
 gulp.task('beautify', function() {
@@ -43,26 +52,20 @@ gulp.task('beautify', function() {
     
 });
 
-gulp.task('ng', function () {
-    return gulp.src('./app/bundles/auth/controllers/AuthController.js')
-        .pipe(ngAnnotate())
-        .pipe(gulp.dest('./app/bundles/auth/controllers/AuthControllerAN.js'));
-});
-
 // Browserify task
 gulp.task('browserify', function() {
 
-  gulp.src(['app/vendor.js'])
+    gulp.src(['app/vendor.js'])
     .pipe(browserify({
       insertGlobals: true,
       debug: true
     }))
     .pipe(concat('lib.js'))
     .pipe(uglyfly())
-    .pipe(gulp.dest('dist/js'))
+    .pipe(gulp.dest('dist/js'));
 
   // Single point of entry (make sure not to src ALL your files, browserify will figure it out for you)
-  gulp.src(['app/app.js'])
+    gulp.src(['app/app.js'])
     .pipe(browserify({
       insertGlobals: true,
       debug: true
@@ -74,35 +77,36 @@ gulp.task('browserify', function() {
     .pipe(gulp.dest('dist/js'));
 });
 
+// ===== Copy files to dist directory
 // Views task
 gulp.task('copy', function() {
-  //copy index.html
-  gulp.src('./app/views/*.html')
+    //copy index.html
+    gulp.src('./app/views/*.html')
     .pipe(gulp.dest('dist/'));
 
-  //copy customer css|js|img files
-  gulp.src(['./app/public/**/*', '!./app/public/less/', '!./app/public/less/**/*'])
+    //copy customer css|js|img files
+    gulp.src(['./app/public/**/*', '!./app/public/less/', '!./app/public/less/**/*'])
     .pipe(gulp.dest('dist/public'));
 
  
 
-  gulp.src('./app/vendor/bootstrap/**/*')
+    gulp.src('./app/vendor/bootstrap/**/*')
     .pipe(gulp.dest('dist/vendor/bootstrap'));
 
-  gulp.src('./app/vendor/jquery/**/*')
+    gulp.src('./app/vendor/jquery/**/*')
     .pipe(gulp.dest('dist/vendor/jquery'));
 
-  // copy all views from bundles
-  gulp.src('./app/bundles/**/*.html')
+    // copy all views from bundles
+    gulp.src('./app/bundles/**/*.html')
     .pipe(gulp.dest('dist/bundles/'))
     .pipe(refresh(lrserver)); // Tell the lrserver to refresh
 });
 
 gulp.task('less', function() {
 
-   gulp.src(['./app/public/less/*.less','!./app/public/less/properties.less'])
+    gulp.src(['./app/public/less/*.less','!./app/public/less/properties.less'])
     .pipe(less({
-      plugins: [autoprefix, cleancss]
+        plugins: [autoprefix, cleancss]
     }))
     .pipe(gulp.dest('dist/public/css'));
 });
@@ -110,19 +114,33 @@ gulp.task('less', function() {
 
 gulp.task('watch', function() {
   // Watch our scripts
-  gulp.watch(['app/**/*.js', '!app/vendor/**/*'], [
-    'browserify'
-  ]);
+    gulp.watch(['app/**/*.js', '!app/vendor/**/*'], ['browserify']);
 
-  gulp.watch(['app/public/less/*.less'],['less']);
+    gulp.watch(['app/public/less/*.less'],['less']);
 
-  gulp.watch(['app/index.html', 'app/**/*.html'], [
-    'copy'
-  ]);
+    gulp.watch(['app/index.html', 'app/**/*.html'], ['copy']);
 
 });
 
 
+// ============: Tests
+
+gulp.task('unit', function (done) {
+    karma.start({
+        configFile: __dirname + '/tests/karma.conf.js',
+        singleRun: true
+    }, done);
+});
+
+gulp.task('e2e', function(done) {
+    var args = ['--baseUrl', 'http://127.0.0.1:8888'];
+    gulp.src(["./tests/e2e/*.js"])
+        .pipe(protractor({
+            configFile: "tests/protractor.conf.js",
+            args: args
+        }))
+        .on('error', function(e) { throw e; });
+});
 
 // Set up an express server (but not starting it yet)
 var server = express();
@@ -149,4 +167,25 @@ gulp.task('serve', function() {
   lrserver.listen(livereloadport);
   // Run the watch task, to keep taps on changes
   gulp.run('watch');
+});
+
+// Dev task
+gulp.task('serve.test', function() {
+    var server = express();
+    // Add live reload
+    server.use(livereload({
+        port: testserverport
+    }));
+    server.use(express.static('./'));
+    server.all('/*', function(req, res) {
+        res.sendfile('index.html', {
+            root: './tests'
+        });
+    });
+    // Start webserver
+    server.listen(testserverport);
+    console.log('Server is started on ' + testserverport);
+    // Start live reload
+    lrserver.listen(testlivereloadport);
+
 });
